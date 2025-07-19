@@ -4,25 +4,57 @@ import { FiStar, FiMapPin, FiClock } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
 import { Database } from '@/types/supabase';
 
-type Facility = Database['public']['Tables']['facilities']['Row'] & {
-  country: {
-    name_en: string;
-    name_ar: string;
+type Facility = {
+  id: string;
+  facility_name_en: string;
+  facility_name_ar: string;
+  facility_description_en?: string;
+  facility_description_ar?: string;
+  owner_id: string;
+  facility_type: string;
+  address_en: string;
+  address_ar: string;
+  country_id: string;
+  city_id: string;
+  location?: {
+    latitude: number;
+    longitude: number;
   };
-  city: {
-    name_en: string;
-    name_ar: string;
-  };
-  is_featured?: boolean;
+  featured_until?: string | null;
+  verification_status?: string;
+  photos?: Array<{ id: string; url: string; is_main?: boolean }>;
   sport_types: Array<{
     name_en: string;
     name_ar: string;
     facility: any;
     pricing: any;
   }>;
+  capacity?: number;
+  rating?: number;
+  review_count?: number;
+  currency?: string;
+  amenities_en?: string[];
+  amenities_ar?: string[];
+  rules_en?: string[];
+  rules_ar?: string[];
+  city?: {
+    name_en: string;
+    name_ar: string;
+  };
+  country?: {
+    name_en: string;
+    name_ar: string;
+    code?: string;
+  };
+  is_active?: boolean;
+  is_featured?: boolean;
+  featured_priority?: number;
+  created_at?: string;
+  updated_at?: string;
   main_photo?: {
     url: string;
   };
+  [key: string]: any; // For any additional properties
 };
 
 interface FacilityCardProps {
@@ -93,7 +125,16 @@ export default function FacilityCard({ facility, language, t }: FacilityCardProp
           </p>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 flex items-center">
             <FiClock className="mr-1 ml-1" />
-            {language === 'en' ? facility.city.name_en : facility.city.name_ar}, {language === 'en' ? facility.country.name_en : facility.country.name_ar}
+            {facility.city && (
+              <span>{language === 'en' ? facility.city.name_en : facility.city.name_ar}</span>
+            )}
+            {facility.city && facility.country && ', '}
+            {facility.country && (
+              <span>{language === 'en' ? facility.country.name_en : facility.country.name_ar}</span>
+            )}
+            {!facility.city && !facility.country && (
+              <span>{t('locationNotSpecified')}</span>
+            )}
           </p>
           <div className="mt-4 flex justify-between items-center">
             <span className="text-blue-600 dark:text-blue-400 font-semibold">
