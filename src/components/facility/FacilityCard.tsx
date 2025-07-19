@@ -14,8 +14,8 @@ type Facility = {
   facility_type: string;
   address_en: string;
   address_ar: string;
-  country_id: string;
-  city_id: string;
+  country_id: string | number;
+  city_id: string | number;
   location?: {
     latitude: number;
     longitude: number;
