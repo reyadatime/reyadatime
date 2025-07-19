@@ -75,22 +75,22 @@ interface Facility {
   address_ar: string;
   country_id: string;
   city_id: string;
-  location: {
+  location?: {
     latitude: number;
     longitude: number;
   };
-  featured_until: string | null;
-  verification_status: string;
+  featured_until?: string | null;
+  verification_status?: string;
   photos: Photo[];
   sport_types: SportType[];
   capacity?: number;
-  rating: number;
-  review_count: number;
-  currency: string;
-  amenities_en: string[];
-  amenities_ar: string[];
-  rules_en: string[];
-  rules_ar: string[];
+  rating?: number;
+  review_count?: number;
+  currency?: string;
+  amenities_en?: string[];
+  amenities_ar?: string[];
+  rules_en?: string[];
+  rules_ar?: string[];
   city?: {
     name_en: string;
     name_ar: string;
@@ -99,6 +99,11 @@ interface Facility {
     name_en: string;
     name_ar: string;
   };
+  is_active?: boolean;
+  is_featured?: boolean;
+  featured_priority?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const supabase = createClientComponentClient();
@@ -525,16 +530,18 @@ export default function FacilityDetailPage({ params }: { params: { id: string } 
               <div className="flex flex-wrap items-center text-sm text-gray-500 dark:text-gray-400 mb-4 gap-4">
                 <div className="flex items-center">
                   <FiStar className="text-yellow-400 mr-1" />
-                  <span>{facility.rating.toFixed(1)} ({facility.review_count} {t('reviews')})</span>
+                  <span>{(facility.rating || 0).toFixed(1)} ({facility.review_count || 0} {t('reviews')})</span>
                 </div>
                 <div className="flex items-center">
                   <FiMapPin className="mr-1" />
                   <span>{facility[`address_${language}`]}</span>
                 </div>
-                <div className="flex items-center">
-                  <FiUsers className="mr-1" />
-                  <span>{facility.sport_types[0].facility.max_capacity} {t('players')}</span>
-                </div>
+                {facility.sport_types?.[0]?.facility?.max_capacity && (
+                  <div className="flex items-center">
+                    <FiUsers className="mr-1" />
+                    <span>{facility.sport_types[0].facility.max_capacity} {t('players')}</span>
+                  </div>
+                )}
               </div>
               <p className="text-gray-700 dark:text-gray-300 mb-6">
                 {facility[`facility_description_${language}`]}
@@ -544,12 +551,12 @@ export default function FacilityDetailPage({ params }: { params: { id: string } 
               <div className="mb-8">
                 <h2 className="text-xl font-semibold mb-3">{t('amenities')}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {facility[`amenities_${language}`].map((amenity, index) => (
+                  {facility[`amenities_${language}`]?.map((amenity, index) => (
                     <div key={index} className="flex items-center">
                       <FiCheck className="text-green-500 mr-2" />
                       <span>{amenity}</span>
                     </div>
-                  ))}
+                  )) || <p className="text-gray-500">{t('noAmenities')}</p>}
                 </div>
               </div>
 
@@ -557,36 +564,42 @@ export default function FacilityDetailPage({ params }: { params: { id: string } 
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-3">{t('rules')}</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {facility[`rules_${language}`].map((rule, index) => (
+                {facility[`rules_${language}`]?.map((rule, index) => (
                   <div key={index} className="flex items-center">
                     <FiCheck className="text-green-500 mr-2" />
                     <span>{rule}</span>
                   </div>
-                ))}
+                )) || <p className="text-gray-500">{t('noRules')}</p>}
               </div>
             </div>
             {/* Location Map */}
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-3">{t('location')}</h2>
               <div className="h-[400px] w-full rounded-lg overflow-hidden mb-4">
-                <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
-                  <GoogleMap
-                    mapContainerStyle={{ width: '100%', height: '100%' }}
-                    center={{
-                      lat: facility.location.latitude,
-                      lng: facility.location.longitude
-                    }}
-                    zoom={15}
-                  >
-                    <Marker
-                      position={{
+                {facility.location ? (
+                  <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
+                    <GoogleMap
+                      mapContainerStyle={{ width: '100%', height: '100%' }}
+                      center={{
                         lat: facility.location.latitude,
                         lng: facility.location.longitude
                       }}
-                      title={facility[`facility_name_${language}`]}
-                    />
-                  </GoogleMap>
-                </LoadScript>
+                      zoom={15}
+                    >
+                      <Marker
+                        position={{
+                          lat: facility.location.latitude,
+                          lng: facility.location.longitude
+                        }}
+                        title={facility[`facility_name_${language}`]}
+                      />
+                    </GoogleMap>
+                  </LoadScript>
+                ) : (
+                  <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <p className="text-gray-500">{t('noLocation')}</p>
+                  </div>
+                )}
               </div>
               <div className="flex items-center text-gray-600 dark:text-gray-400">
                 <FiMapPin className="mr-2" />
