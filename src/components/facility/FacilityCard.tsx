@@ -48,7 +48,7 @@ type Facility = {
   };
   is_active?: boolean;
   is_featured?: boolean;
-  featured_priority?: number;
+  featured_priority?: number | null;
   created_at?: string;
   updated_at?: string;
   main_photo?: {
