@@ -134,30 +134,32 @@ const CountrySelector = () => {
   if ((!currentCountry || !currentCountry.code) && !loading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[80vh] flex flex-col">
           <h2 className="text-xl font-bold mb-4">{t('select_country', 'Select Your Country')}</h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
             {t('select_country_message', 'Please select your country to continue')}
           </p>
-          <div className="space-y-2">
-            {countryList.map((country: Country) => (
-              <button
-                key={country.code}
-                onClick={() => handleCountryChange({
-                  id: country.id,
-                  code: country.code,
-                  name_en: country.name_en,
-                  name_ar: country.name_ar,
-                  currency: country.currency,
-                  currency_symbol: country.currency_symbol,
-                  active: country.active
-                })}
-                className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md flex items-center justify-between"
-              >
-                <span>{country.name_en}</span>
-                <span className="text-gray-500 text-sm">{country.name_ar}</span>
-              </button>
-            ))}
+          <div className="overflow-y-auto pr-2 -mr-2 flex-1">
+            <div className="space-y-2 pr-2">
+              {countryList.map((country: Country) => (
+                <button
+                  key={country.code}
+                  onClick={() => handleCountryChange({
+                    id: country.id,
+                    code: country.code,
+                    name_en: country.name_en,
+                    name_ar: country.name_ar,
+                    currency: country.currency,
+                    currency_symbol: country.currency_symbol,
+                    active: country.active
+                  })}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md flex items-center justify-between"
+                >
+                  <span>{country.name_en}</span>
+                  <span className="text-gray-500 text-sm">{country.name_ar}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

@@ -374,9 +374,12 @@ export function CountryProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       setError(null);
+      console.log('changeCountry called with input:', input);
 
       // Normalize the input to get a valid country object
       const normalized = normalizeCountryInput(input);
+      console.log('Normalized country:', normalized);
+      
       if (!normalized) {
         throw new Error('Invalid country selection');
       }
@@ -384,6 +387,7 @@ export function CountryProvider({ children }: { children: ReactNode }) {
       const { code, country } = normalized;
       const lowerCode = code.toLowerCase();
       const currentPath = window.location.pathname;
+      console.log('Current path:', currentPath, 'New country code:', lowerCode);
       
       // Always redirect to the home page of the selected country
       const targetPath = `/${lowerCode}`;
@@ -394,10 +398,11 @@ export function CountryProvider({ children }: { children: ReactNode }) {
 
       // Only navigate if the path would change
       if (targetPath !== currentPath) {
-        // Use replaceState to avoid adding to browser history
-        window.history.replaceState({}, '', targetPath);
+        // Use router.replace for proper client-side navigation
+        router.replace(targetPath);
         
-        // Force a soft navigation for client-side routing
+        // Force a page reload to ensure all context updates are applied
+        window.location.href = targetPath;
         router.replace(targetPath);
         
         // Force a hard navigation if we're still on the same page after a short delay

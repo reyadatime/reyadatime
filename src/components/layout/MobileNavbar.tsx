@@ -32,12 +32,7 @@ export default function MobileNavbar() {
       icon: <FiCalendar className="h-6 w-6" />,
       requiresCountry: true
     },
-    {
-      label: t('contact'),
-      href: '/contact',
-      icon: <FiMail className="h-6 w-6" />,
-      requiresCountry: false
-    },
+    
 
   ];
 

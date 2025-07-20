@@ -48,22 +48,30 @@ export default function FacilitiesPage({ params }: PageProps) {
   const router = useRouter();
   const {currentCountry} = useCountry();
   
+  // Debug log for country changes
+  useEffect(() => {
+    console.log('Current country in facilities page:', currentCountry);
+  }, [currentCountry]);
+  
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState(searchParams.get('type') || '');
-  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedCity, setSelectedCity] = useState<string | number | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [showFilters, setShowFilters] = useState(false);
   
   // Get the country code from URL parameter and ensure lowercase
-  const countryCode = currentCountry?.code.toLowerCase() || '';
+  const countryCode = params.countryCode?.toLowerCase() || currentCountry?.code?.toLowerCase() || 'qa';
   
   // Ensure the country code is valid
   useEffect(() => {
-    // If country code is not provided, redirect to Qatar by default
-    if (!countryCode) {
-      router.push(`/${currentCountry?.code.toLowerCase()}/facilities`);
+    // If no country code is available yet, don't do anything
+    if (!currentCountry?.code) return;
+    
+    // If URL doesn't match current country, update the URL
+    if (params.countryCode?.toLowerCase() !== currentCountry.code.toLowerCase()) {
+      router.push(`/${currentCountry.code.toLowerCase()}/facilities`);
       return;
     }
     
@@ -71,7 +79,7 @@ export default function FacilitiesPage({ params }: PageProps) {
     
     // Fetch facilities when country code changes
     fetchFacilities();
-  }, [countryCode, router]);
+  }, [params.countryCode, currentCountry?.code, router, countryCode]);
 
   // Sport types for filtering
   const sportTypes = [
@@ -85,20 +93,79 @@ export default function FacilitiesPage({ params }: PageProps) {
     { id: 'gym', name: t('gym') },
   ];
 
-  // Locations for filtering (would come from database in a real app)
-  const locations = [
-    { id: '', name: t('allLocations') },
-    { id: 'doha', name: 'Doha' },
-    { id: 'lusail', name: 'Lusail' },
-    { id: 'al-wakrah', name: 'Al Wakrah' },
-  ];
+  // State for locations
+  const [locations, setLocations] = useState<Array<{id: string, name: string}>>([{ id: '', name: t('allLocations') }]);
 
-  // This effect is now handled by the countryId effect above
+  // Memoize the allLocations translation
+  const allLocationsText = t('allLocations');
+
+  // Fetch cities based on current country
   useEffect(() => {
-    if (selectedType) {
-      fetchFacilities();
+    if (!currentCountry?.id) {
+      console.log('No country ID available');
+      return;
     }
-  }, [selectedType]);
+    
+    console.log('Fetching cities for country ID:', currentCountry.id);
+    
+    const fetchCities = async () => {
+      try {
+        // First, get the country by code to ensure we have the correct ID
+        const { data: countryData, error: countryError } = await supabase
+          .from('countries')
+          .select('id')
+          .eq('code', currentCountry.code.toUpperCase())
+          .single();
+          
+        if (countryError || !countryData) {
+          console.error('Error fetching country:', countryError);
+          throw new Error('Country not found');
+        }
+        
+        // Then get cities for this country ID
+        const { data: cities, error } = await supabase
+          .from('cities')
+          .select('id, name_en, name_ar, country_id')
+          .eq('country_id', countryData.id)
+          .order('name_en', { ascending: true });
+
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
+
+        console.log('Fetched cities:', cities);
+
+        // Format cities for the dropdown
+        const formattedCities = [
+          { id: '', name: allLocationsText },
+          ...cities.map(city => ({
+            id: city.id,
+            name: language === 'ar' ? (city.name_ar || city.name_en) : city.name_en
+          }))
+        ];
+
+        console.log('Formatted cities:', formattedCities);
+        setLocations(formattedCities);
+      } catch (error) {
+        console.error('Error fetching cities:', error);
+        // Just show the 'All Locations' option if there's an error
+        setLocations([{ id: '', name: allLocationsText }]);
+      }
+    };
+
+    fetchCities();
+  }, [currentCountry?.id, language, allLocationsText, supabase]);
+
+  // Fetch facilities when filters change
+  useEffect(() => {
+    // Small delay to prevent too many requests
+    const timer = setTimeout(() => {
+      fetchFacilities();
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [selectedType, selectedCity, priceRange]);
 
   const fetchFacilities = async () => {
     setLoading(true);
@@ -163,9 +230,9 @@ export default function FacilitiesPage({ params }: PageProps) {
         .order('is_featured', { ascending: false })
         .order('rating', { ascending: false });
       
-      // Apply location filter if selected
-      if (selectedLocation) {
-        query = query.ilike('address_en', `%${selectedLocation}%`);
+      // Apply city filter if selected
+      if (selectedCity) {
+        query = query.eq('city_id', selectedCity);
       }
       
       // Apply search term filter if any
@@ -271,8 +338,14 @@ export default function FacilitiesPage({ params }: PageProps) {
                       id={`location-${location.id}`}
                       name="location"
                       value={location.id}
-                      checked={selectedLocation === location.id}
-                      onChange={(e) => setSelectedLocation(e.target.value)}
+                      checked={location.id === '' ? !selectedCity : String(selectedCity) === String(location.id)}
+                      onChange={(e) => {
+                        // Convert to number if it's a numeric string, otherwise keep as string
+                        const value = isNaN(Number(e.target.value)) 
+                          ? e.target.value 
+                          : Number(e.target.value);
+                        setSelectedCity(value);
+                      }}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                     />
                     <label htmlFor={`location-${location.id}`} className="ml-2 text-sm text-gray-700 dark:text-gray-300">
@@ -296,8 +369,8 @@ export default function FacilitiesPage({ params }: PageProps) {
                   className="w-full"
                 />
                 <div className="flex justify-between text-sm text-gray-500 mt-1">
-                  <span>0 QAR</span>
-                  <span>{priceRange[1]} QAR</span>
+                  <span>0 {currentCountry?.currency || 'QAR'}</span>
+                  <span>{priceRange[1]} {currentCountry?.currency || 'QAR'}</span>
                 </div>
               </div>
             </div>
@@ -308,7 +381,7 @@ export default function FacilitiesPage({ params }: PageProps) {
               fullWidth
               onClick={() => {
                 setSelectedType('');
-                setSelectedLocation('');
+                setSelectedCity('');
                 setPriceRange([0, 1000]);
                 fetchFacilities();
               }}
@@ -355,8 +428,14 @@ export default function FacilitiesPage({ params }: PageProps) {
                       id={`mobile-location-${location.id}`}
                       name="mobileLocation"
                       value={location.id}
-                      checked={selectedLocation === location.id}
-                      onChange={(e) => setSelectedLocation(e.target.value)}
+                      checked={location.id === '' ? !selectedCity : String(selectedCity) === String(location.id)}
+                      onChange={(e) => {
+                        // Convert to number if it's a numeric string, otherwise keep as string
+                        const value = isNaN(Number(e.target.value)) 
+                          ? e.target.value 
+                          : Number(e.target.value);
+                        setSelectedCity(value);
+                      }}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                     />
                     <label htmlFor={`mobile-location-${location.id}`} className="ml-2 text-sm text-gray-700">
@@ -380,8 +459,8 @@ export default function FacilitiesPage({ params }: PageProps) {
                   className="w-full"
                 />
                 <div className="flex justify-between text-sm text-gray-500 mt-1">
-                  <span>0 QAR</span>
-                  <span>{priceRange[1]} QAR</span>
+                  <span>0 {currentCountry?.currency}</span>
+                  <span>{priceRange[1]} {currentCountry?.currency}</span>
                 </div>
               </div>
             </div>
@@ -393,7 +472,7 @@ export default function FacilitiesPage({ params }: PageProps) {
                 fullWidth
                 onClick={() => {
                   setSelectedType('');
-                  setSelectedLocation('');
+                  setSelectedCity('');
                   setPriceRange([0, 1000]);
                   fetchFacilities();
                   setShowFilters(false);

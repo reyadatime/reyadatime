@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useState } from 'react';
 import { useCountry } from '@/context/CountryContext';
 import { FiStar, FiMapPin, FiClock } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
@@ -70,13 +71,27 @@ export default function FacilityCard({ facility, language, t }: FacilityCardProp
   // Generate the facility URL with country code
   const facilityUrl = `/${countryCode}/facilities/${facility.id}`;
 
+  const [isPressed, setIsPressed] = useState(false);
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md group hover:scale-105">
+    <div className="h-full">
       <Link 
         href={facilityUrl}
-        className="block focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 rounded-lg"
+        className="block h-full"
+        onMouseDown={() => setIsPressed(true)}
+        onMouseUp={() => setIsPressed(false)}
+        onMouseLeave={() => setIsPressed(false)}
         aria-label={`${language === 'en' ? 'View' : 'عرض'} ${language === 'en' ? facility.facility_name_en : facility.facility_name_ar}`}
       >
+        <div className={`
+          bg-white dark:bg-gray-800 
+          rounded-lg overflow-hidden 
+          shadow-sm hover:shadow-md 
+          transition-all duration-200 
+          h-full flex flex-col 
+          transform ${isPressed ? 'scale-95' : 'hover:scale-[1.02]'}
+          ${isPressed ? 'shadow-inner' : ''}
+        `}>
         <div className="relative">
           {facility.main_photo?.url ? (
             <div className="w-full h-48 overflow-hidden">
@@ -142,6 +157,7 @@ export default function FacilityCard({ facility, language, t }: FacilityCardProp
             </span>
             <Button size="sm">{t('book')}</Button>
           </div>
+        </div>
         </div>
       </Link>
     </div>
