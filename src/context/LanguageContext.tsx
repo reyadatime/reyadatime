@@ -1005,42 +1005,87 @@ type LanguageContextType = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
-  const [dir, setDir] = useState('ltr');
+  const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
 
+  // Set initial language from localStorage after component mounts
   useEffect(() => {
-    // Check if language is stored in localStorage
-    const storedLanguage = localStorage.getItem('language') as Language;
+    const storedLanguage = typeof window !== 'undefined' ? localStorage.getItem('language') : null;
     if (storedLanguage && (storedLanguage === 'en' || storedLanguage === 'ar')) {
-      setLanguage(storedLanguage);
+      setCurrentLanguage(storedLanguage as Language);
     }
   }, []);
 
+  // Set initial direction after component mounts
   useEffect(() => {
-    // Update direction based on language
-    setDir(language === 'ar' ? 'rtl' : 'ltr');
-    // Store language preference
-    localStorage.setItem('language', language);
-    // Update HTML dir attribute
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = language;
-  }, [language]);
+    const storedLanguage = typeof window !== 'undefined' ? localStorage.getItem('language') : null;
+    const initialLang = storedLanguage && (storedLanguage === 'en' || storedLanguage === 'ar') 
+      ? storedLanguage 
+      : 'en';
+    
+    // Set initial direction
+    document.documentElement.dir = initialLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = initialLang;
+    
+    // Update RTL class on document
+    updateDocumentRTL(initialLang === 'ar');
+  }, []);
 
-  const t = (key: string, params?: Record<string, any>): string => {
-    if (!translations[key]) {
-      console.warn(`Translation key not found: ${key}`);
+  const updateDocumentRTL = (isRTL: boolean) => {
+    if (isRTL) {
+      document.documentElement.classList.add('rtl');
+      document.documentElement.dir = 'rtl';
+    } else {
+      document.documentElement.classList.remove('rtl');
+      document.documentElement.dir = 'ltr';
+    }
+  };
+
+  const toggleLanguage = (lang: Language) => {
+    setCurrentLanguage(lang);
+    localStorage.setItem('language', lang);
+    
+    // Update direction immediately
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
+    
+    // Update RTL class using centralized function
+    updateDocumentRTL(lang === 'ar');
+  };
+
+  const t = (key: string, params: Record<string, any> = {}) => {
+    try {
+      // Get the translation entry for the key
+      const translationEntry = translations[key as keyof typeof translations];
+      
+      if (!translationEntry) {
+        console.warn(`Translation key '${key}' not found`);
+        return key;
+      }
+      
+      // Get the translation for the current language
+      const translation = translationEntry[currentLanguage] || key;
+      
+      // Replace any variables in the translation
+      return Object.entries(params).reduce(
+        (acc, [paramKey, paramValue]) => 
+          acc.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue)),
+        translation
+      );
+    } catch (error) {
+      console.error('Translation error:', error);
       return key;
     }
-    const translation = translations[key][language];
-    if (!params) return translation;
+  };
 
-    return Object.entries(params).reduce((acc, [key, value]) => {
-      return acc.replace(`{${key}}`, String(value));
-    }, translation);
+  const contextValue: LanguageContextType = {
+    language: currentLanguage,
+    setLanguage: toggleLanguage,
+    t,
+    dir: currentLanguage === 'ar' ? 'rtl' : 'ltr'
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, dir }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );

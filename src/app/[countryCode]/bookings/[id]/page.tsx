@@ -8,7 +8,22 @@ import { createClient } from '@/lib/supabase-browser';
 import {useCountry} from '@/context/CountryContext';
 
 const supabase = createClient();
-import { Booking, Facility } from '@/types';
+import { Booking } from '@/types';
+
+interface Photo {
+  id: string;
+  url: string;
+  is_main: boolean;
+  created_at: string;
+}
+
+interface Facility {
+  id: string;
+  facility_name_en: string;
+  facility_name_ar: string;
+  photos: Photo[];
+  [key: string]: any; // For any other properties that might exist
+}
 import Button from '@/components/ui/Button';
 import { FiCalendar, FiClock, FiUsers, FiMapPin, FiDollarSign, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import Link from 'next/link';
@@ -38,7 +53,13 @@ export default function BookingDetailsPage() {
     try {
       const { data, error } = await supabase
         .from('bookings')
-        .select('*, facility:facilities(*)')
+        .select(`
+          *,
+          facility:facilities(
+            *,
+            photos(*)
+          )
+        `)
         .eq('id', params.id)
         .eq('user_id', user?.id)
         .single();
@@ -132,15 +153,26 @@ export default function BookingDetailsPage() {
 
       {/* Main Content */}
       <div className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl overflow-hidden dark:border-gray-700 dark:border">
-        {/* Facility Image */}
-        <div className="relative h-64">
-          <Image 
-            src={booking.facility.images[0]} 
-            alt={booking.facility.facility_name_en}
-            fill
-            className="object-cover"
-          />
+        {/* Facility Images */}
+      <div className="relative group">
+        <div className="relative rounded-t-lg overflow-hidden" style={{ paddingBottom: '60%' }}>
+          {booking.facility.photos?.length > 0 ? (
+            <div className="absolute inset-0">
+              <Image
+                src={booking.facility.photos.find(photo => photo.is_main)?.url || booking.facility.photos[0].url}
+                alt={booking.facility[`facility_name_${language}`]}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+              <span className="text-gray-400 dark:text-gray-300 text-lg">{t('No Images Available')}</span>
+            </div>
+          )}
         </div>
+      </div>
 
         {/* Booking Details */}
         <div className="p-6">

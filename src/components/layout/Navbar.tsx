@@ -76,7 +76,7 @@ export default function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex-shrink-0 flex items-center">
               <Image
-                src="/Logo.png"
+                src="/ReydatimeLogo.png"
                 alt={t('appName')}
                 width={400}
                 height={400}

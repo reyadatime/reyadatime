@@ -74,20 +74,35 @@ export default function BookingsPage() {
 
     try {
       const today = new Date();
-      const { data: bookingsData, error } = await supabase.from('bookings')
+      const { data: bookingsData, error } = await supabase
+        .from('bookings')
         .select(`
           *,
           facility:facilities(id, facility_name_en, facility_name_ar, address_en, address_ar, currency)
         `)
         .eq('user_id', user.id)
-        .gte('booking_date', activeTab === 'upcoming' ? today.toISOString().split('T')[0] : '1900-01-01')
-        .lt('booking_date', activeTab === 'upcoming' ? '2100-01-01' : today.toISOString().split('T')[0])
+        .or(
+          // For upcoming tab, show all future bookings and pending bookings
+          activeTab === 'upcoming' 
+            ? `booking_date.gte.${today.toISOString().split('T')[0]},status.eq.pending`
+            // For past tab, show completed or cancelled bookings that are in the past
+            : `and(booking_date.lt.${today.toISOString().split('T')[0]},status.in.(${['completed', 'cancelled_by_user', 'cancelled_by_facility', 'no_show'].join(',')}))`
+        )
         .order('booking_date', { ascending: activeTab === 'upcoming' })
         .order('start_time', { ascending: true });
 
       if (error) throw error;
 
-      setBookings(bookingsData as BookingType[] || []);
+      // Filter out any cancelled or completed bookings from the upcoming tab
+      const filteredBookings = activeTab === 'upcoming'
+        ? (bookingsData || []).filter(booking => 
+            booking.status === 'pending' || 
+            booking.status === 'confirmed' ||
+            booking.status === 'checked_in'
+          )
+        : (bookingsData || []);
+
+      setBookings(filteredBookings as BookingType[]);
     } catch (error) {
       console.error('Error fetching bookings:', error);
       toast.error(t('Failed to load bookings'));

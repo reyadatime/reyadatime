@@ -15,7 +15,7 @@ export default function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">
               <Link href="/" className="inline-block">
-                <img src="/logo.png" alt="Website Logo" className="h-16 inline-block"/>
+                <img src="/ReydatimeLogo.png" alt="Website Logo" className="h-16 inline-block"/>
               </Link>
             </h3>
             <p className="text-gray-300 text-sm">

@@ -8,11 +8,13 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import Button from '@/components/ui/Button';
 import FacilityCard from '@/components/facility/FacilityCard';
+import { useCountry } from '@/context/CountryContext';
 
 export default function Home() {
   const { t, language } = useLanguage();
   const { theme } = useTheme();
   const router = useRouter();
+  const { currentCountry } = useCountry();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
@@ -26,7 +28,7 @@ export default function Home() {
     if (selectedLocation) queryParams.append('location', selectedLocation);
     if (selectedDate) queryParams.append('date', selectedDate);
     
-    router.push(`/facilities?${queryParams.toString()}`);
+    router.push(`/${currentCountry?.code?.toLowerCase()}/facilities`);
   };
   
   // Mock data for featured facilities
@@ -117,7 +119,7 @@ export default function Home() {
               {t('heroSubtitle')}
             </p>
             <div className="flex flex-wrap gap-6">
-              <Link href="/facilities">
+              <Link href={`/${currentCountry?.code?.toLowerCase()}/facilities`}>
                 <Button 
                   size="lg" 
                   className="px-10 py-6 bg-[#00ffaaae] hover:bg-[#00e6999d] text-slate-900 text-lg font-semibold shadow-lg"
@@ -125,7 +127,7 @@ export default function Home() {
                   {t('exploreFacilities')}
                 </Button>
               </Link>
-              <Link href="/auth/signup">
+              <Link href={`/${currentCountry?.code?.toLowerCase()}/auth/signup`}>
                 <Button 
                   size="lg" 
                   variant="outline" 
@@ -182,14 +184,14 @@ export default function Home() {
       <section className="mb-16">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold dark:text-white">{t('sportTypes')}</h2>
-          <Link href="/facilities" className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 text-sm font-medium">
+          <Link href={`/${currentCountry?.code?.toLowerCase()}/facilities`} className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 text-sm font-medium">
             {t('viewAll')} <FiArrowRight size={16} />
           </Link>
         </div>
         <div className="grid grid-cols-3 md:grid-cols-7 gap-6">
           {sportTypes.map((sport) => (
             <Link 
-              href={`/facilities?type=${sport.id}`} 
+              href={`/${currentCountry?.code?.toLowerCase()}/facilities?type=${sport.id}`} 
               key={sport.id}
               className="flex flex-col items-center p-5 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md dark:shadow-gray-900/30 transition-all hover:scale-105 border border-gray-100 dark:border-gray-700"
             >
@@ -206,7 +208,7 @@ export default function Home() {
       <section className="mb-16">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold dark:text-white">{t('featuredFacilities')}</h2>
-          <Link href="/facilities" className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 text-sm font-medium">
+          <Link href={`/${currentCountry?.code?.toLowerCase()}/facilities`} className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 text-sm font-medium">
             {t('viewAll')} <FiArrowRight size={16} />
           </Link>
         </div>

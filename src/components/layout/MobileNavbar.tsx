@@ -24,13 +24,11 @@ export default function MobileNavbar() {
       label: t('facilities'),
       href: `/${currentCountry?.code?.toLowerCase()}/facilities`,
       icon: <FiSearch className="h-6 w-6" />,
-      requiresCountry: true
     },
     {
       label: t('bookings'),
       href: `/${currentCountry?.code?.toLowerCase()}/bookings`,
       icon: <FiCalendar className="h-6 w-6" />,
-      requiresCountry: true
     },
     
 

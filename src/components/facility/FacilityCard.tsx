@@ -89,6 +89,7 @@ export default function FacilityCard({ facility, language, t }: FacilityCardProp
           shadow-sm hover:shadow-md 
           transition-all duration-200 
           h-full flex flex-col 
+          border border-gray-200 dark:border-gray-700
           transform ${isPressed ? 'scale-95' : 'hover:scale-[1.02]'}
           ${isPressed ? 'shadow-inner' : ''}
         `}>

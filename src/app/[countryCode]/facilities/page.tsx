@@ -303,7 +303,7 @@ export default function FacilitiesPage({ params }: PageProps) {
       <div className="flex flex-col md:flex-row gap-8">
         {/* Filters - Desktop */}
         <div className="w-full md:w-64 hidden md:block">
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600">
             <h2 className="font-semibold text-lg mb-4">{t('filterBy')}</h2>
             
             <div className="mb-6">
@@ -393,7 +393,7 @@ export default function FacilitiesPage({ params }: PageProps) {
 
         {/* Filters - Mobile */}
         {showFilters && (
-          <div className="md:hidden bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-4">
+          <div className="md:hidden bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 mb-4">
             <h2 className="font-semibold text-lg mb-4">{t('filterBy')}</h2>
             
             <div className="mb-6">

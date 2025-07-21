@@ -260,7 +260,8 @@ export function CountryProvider({ children }: { children: ReactNode }) {
           '/admin',
           '/notifications',
           '/api',
-          '/_next'
+          '/_next',
+          '/dashboard'
         ];
         
         // Detect country from URL or localStorage on initial load

@@ -38,6 +38,12 @@ export default function ProfileMenu() {
       requiresCountry: false
     },
     {
+      label: t('dashboard'),
+      path: '/dashboard',
+      icon: <FiHome className="w-4 h-4 mr-2" />,
+      requiresCountry: true
+    },
+    {
       label: t('admin'),
       path: '/admin',
       icon: <FiShield className="w-4 h-4 mr-2" />,
